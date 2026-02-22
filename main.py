@@ -76,6 +76,12 @@ loss, accuracy = model.evaluate(X_test, y_test) #Hace un examen final y apunta e
 
 print("Precisión en test:", accuracy)
 
+print("Precisión en test:", accuracy)
+
+# Guardar el modelo entrenado
+model.save("modelo_nigiri.h5")
+print("Modelo guardado como 'modelo_nigiri.h5'")
+
 def predecir_imagen(ruta_imagen):
     img = Image.open(ruta_imagen).convert("RGB").resize((64,64))
     img_array = np.array(img) / 255.0  # normalizar igual que antes
@@ -90,6 +96,7 @@ def predecir_imagen(ruta_imagen):
         print("❌ NO es un nigiri de salmón")
 
 # Probar con una imagen nueva
-ruta = "MisFotosPrueba/nigiri_prueba.png"  # Pon aquí la ruta de tu imagen
-predecir_imagen(ruta)
+ruta = "MisFotosPrueba/prueba.png"  # Pon aquí la ruta de tu imagen
+if os.path.exists(ruta):
+    predecir_imagen(ruta)
 
