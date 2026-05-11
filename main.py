@@ -60,38 +60,40 @@ print(f"  Prueba: {len(X_test)} imágenes")
 from tensorflow.keras.preprocessing.image import ImageDataGenerator
 
 datagen = ImageDataGenerator(
-    rotation_range=20,  # Rotar imágenes 0-20 grados
-    width_shift_range=0.2,  # Desplazar horizontalmente 20%
-    height_shift_range=0.2,  # Desplazar verticalmente 20%
+    rotation_range=30,  # Más rotación
+    width_shift_range=0.3,  # Más desplazamiento
+    height_shift_range=0.3,
     horizontal_flip=True,  # Voltear horizontalmente
-    zoom_range=0.2,  # Zoom 0.8x a 1.2x
-    brightness_range=[0.8, 1.2]  # Variar brillo
+    vertical_flip=True,  # Voltear verticalmente también
+    zoom_range=0.3,  # Más zoom
+    brightness_range=[0.7, 1.3],  # Más variación de brillo
+    fill_mode='nearest'
 )
 
 import tensorflow as tf
 from tensorflow.keras.models import Sequential
-from tensorflow.keras.layers import Conv2D, MaxPooling2D, Flatten, Dense, Dropout
+from tensorflow.keras.layers import Conv2D, MaxPooling2D, Flatten, Dense, Dropout, BatchNormalization
 from tensorflow.keras.callbacks import EarlyStopping
 
-# Crear modelo más potente
+# Modelo simplificado para pocas imágenes
 model = Sequential([
-    Conv2D(64, (3,3), activation='relu', input_shape=(128,128,3)),
+    Conv2D(32, (3,3), activation='relu', input_shape=(128,128,3)),
+    BatchNormalization(),
     MaxPooling2D((2,2)),
-    Conv2D(128, (3,3), activation='relu'),
+    
+    Conv2D(64, (3,3), activation='relu'),
+    BatchNormalization(),
     MaxPooling2D((2,2)),
-    Conv2D(256, (3,3), activation='relu'),
-    MaxPooling2D((2,2)),
+    
     Flatten(),
-    Dense(256, activation='relu'),
-    Dropout(0.5),  # Evita overfitting
     Dense(128, activation='relu'),
-    Dropout(0.3),
+    Dropout(0.2),  # Dropout más suave
     Dense(2, activation='softmax')  # 2 clases: nigiri_salmon y no_nigiri
 ])
 
 # Compilar modelo
 model.compile(
-    optimizer=tf.keras.optimizers.Adam(learning_rate=0.001),
+    optimizer=tf.keras.optimizers.Adam(learning_rate=0.0005),
     loss='sparse_categorical_crossentropy',
     metrics=['accuracy']
 )
@@ -99,11 +101,11 @@ model.compile(
 print("\n✓ Modelo creado y compilado")
 
 # Entrenar el modelo con Data Augmentation
-early_stop = EarlyStopping(monitor='val_loss', patience=5, restore_best_weights=True)
+early_stop = EarlyStopping(monitor='val_loss', patience=10, restore_best_weights=True)
 
 history = model.fit(
-    datagen.flow(X_train, y_train, batch_size=32),  # Data augmentation en tiempo real
-    epochs=50,  # Más épocas para mejor aprendizaje
+    datagen.flow(X_train, y_train, batch_size=16),  # Batch más pequeño
+    epochs=100,  # Más épocas (pero Early Stopping va a parar)
     validation_data=(X_test, y_test),
     callbacks=[early_stop],
     verbose=1
@@ -124,11 +126,11 @@ model.save("modelo_nigiri.h5")
 print("Modelo guardado como 'modelo_nigiri.h5'")
 
 def predecir_imagen(ruta_imagen):
-    img = Image.open(ruta_imagen).convert("RGB").resize((64,64))
+    img = Image.open(ruta_imagen).convert("RGB").resize((128,128))
     img_array = np.array(img) / 255.0  # normalizar igual que antes
     img_array = np.expand_dims(img_array, axis=0)  # añadir dimensión extra
 
-    prediccion = model.predict(img_array)
+    prediccion = model.predict(img_array, verbose=0)
     clase = np.argmax(prediccion)
 
     if clase == 0:

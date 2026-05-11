@@ -48,7 +48,7 @@ if archivo_cargado is not None:
     if st.button("🔍 Analizar imagen", type="primary", use_container_width=True):
         with st.spinner("Analizando imagen..."):
             # Preparar la imagen
-            img = Image.open(archivo_cargado).convert("RGB").resize((64, 64))
+            img = Image.open(archivo_cargado).convert("RGB").resize((128, 128))
             img_array = np.array(img) / 255.0
             img_array = np.expand_dims(img_array, axis=0)
             
